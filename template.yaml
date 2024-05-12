@@ -1,0 +1,72 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform:
+  - 'AWS::Serverless-2016-10-31'
+Description: A Lambda authorizer that can be used to ensure that calls are made via CloudFront.
+Parameters:
+  OriginKey:
+    Type: String
+    NoEcho: true
+    MinLength: '32'
+    MaxLength: '128'
+    AllowedPattern: '[a-zA-Z0-9]*'
+    Description: |
+      The origin key used to ensure calls are made via CloudFront.
+Globals:
+  Function:
+    Timeout: 3
+
+Metadata:
+  AWS::ServerlessRepo::Application:
+    Name: origin-key-authorizer
+    Description: A Lambda authoriser that can be used to ensure that calls are made via CloudFront.
+    Author: Andy Caine
+    SpdxLicenseId: MIT
+    LicenseUrl: LICENSE
+    ReadmeUrl: README.md
+    Labels: ['authentication', 'lambda', 'cloudfront', 'apigateway']
+    HomePageUrl: https://github.com/andycaine/origin-key-authorizer#readme
+    SemanticVersion: 0.1.0
+    SourceCodeUrl: https://github.com/andycaine/origin-key-authorizer
+
+Resources:
+  OriginKeyAuthorizer:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: oka/
+      Handler: app.handler
+      Runtime: python3.12
+      Environment:
+        Variables:
+          CUSTOM_ORIGIN_KEY: !Ref OriginKey
+      Architectures:
+        - arm64
+
+  LambdaAuthorizerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - apigateway.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: InvokeAuthorizerPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: lambda:InvokeFunction
+                Resource:
+                  - !GetAtt OriginKeyAuthorizer.Arn
+
+Outputs:
+  LambdaAuthorizerRoleArn:
+    Description: "ARN of the Lambda Authorizer Role"
+    Value: !GetAtt LambdaAuthorizerRole.Arn
+  OriginKeyAuthorizerArn:
+    Description: "ARN of the Origin Key Authorizer"
+    Value: !GetAtt OriginKeyAuthorizer.Arn
