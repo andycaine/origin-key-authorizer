@@ -25,7 +25,7 @@ Metadata:
     ReadmeUrl: README.md
     Labels: ['authentication', 'lambda', 'cloudfront', 'apigateway']
     HomePageUrl: https://github.com/andycaine/origin-key-authorizer#readme
-    SemanticVersion: 0.1.0
+    SemanticVersion: 0.1.1
     SourceCodeUrl: https://github.com/andycaine/origin-key-authorizer
 
 Resources:
